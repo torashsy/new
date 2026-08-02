@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+*.log
+
+# 生成画像・素材は重いのでリポジトリに入れない
+/renders/
+/assets/
+*.psd
+
+# 参照用に保存した他人の投稿のスクショ等は絶対にコミットしない
+/research/raw/

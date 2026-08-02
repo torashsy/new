@@ -1,0 +1,10 @@
+{
+  "name": "new",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AI インフルエンサーの設定を破綻なく作り込むためのリポジトリ",
+  "scripts": {
+    "validate": "node scripts/validate.mjs"
+  }
+}

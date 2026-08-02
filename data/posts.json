@@ -1,0 +1,49 @@
+{
+  "$schema": "../schemas/posts.schema.json",
+  "_note": "投稿ログ。validate はここを全データと突き合わせて破綻を探す。下の3件は検証器の動作確認用サンプル（post_003 は意図的にエラーを含む）。",
+
+  "posts": [
+    {
+      "id": "post_001",
+      "status": "draft",
+      "platform": "instagram",
+      "date": "2024-06-08",
+      "time": "17:05",
+      "location_id": "loc_setagaya_park",
+      "gear_id": "gear_phone",
+      "outfit": ["itm_white_tee", "itm_denim_wide", "itm_sneaker_white", "itm_watch"],
+      "exif": { "focal_length_mm": 26, "aperture": "f/1.5", "iso": 64, "aspect": "4:3" },
+      "caption": "（未執筆）",
+      "ai_label": true,
+      "notes": "夕方の斜光。腕時計の文字盤は17:05に合わせる。"
+    },
+    {
+      "id": "post_002",
+      "status": "draft",
+      "platform": "instagram",
+      "date": "2024-06-15",
+      "time": "14:20",
+      "location_id": "loc_home",
+      "gear_id": "gear_phone",
+      "outfit": ["itm_white_tee", "itm_denim_wide", "itm_watch"],
+      "exif": { "focal_length_mm": 13, "aperture": "f/2.4", "iso": 200, "aspect": "4:3" },
+      "caption": "（未執筆）",
+      "ai_label": true,
+      "notes": "室内引き。超広角で部屋の広さを出す。post_001 と同じ服なので、髪型か小物を変えて別日感を出す。"
+    },
+    {
+      "id": "post_003",
+      "status": "draft",
+      "platform": "instagram",
+      "date": "2024-01-20",
+      "time": "21:40",
+      "location_id": "loc_shimokita",
+      "gear_id": "gear_phone",
+      "outfit": ["itm_white_tee", "itm_sneaker_white"],
+      "exif": { "focal_length_mm": 85, "aperture": "f/1.8", "iso": 100, "aspect": "3:2" },
+      "caption": "（未執筆）",
+      "ai_label": false,
+      "notes": "検証器のテスト用。意図的に破綻させてある: 1月に夏物 / スニーカー購入前 / 営業時間外 / 撮影不可ロケ / iPhone に存在しない85mm / 存在しないアスペクト比 / AIラベルなし。"
+    }
+  ]
+}

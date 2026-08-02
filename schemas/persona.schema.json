@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Persona",
+  "type": "object",
+  "required": ["handle", "age", "base", "constraints"],
+  "properties": {
+    "handle": { "type": "string" },
+    "display_name": { "type": "string" },
+    "age": { "type": "integer", "minimum": 18 },
+    "birthday": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "pronouns": { "type": "string" },
+    "base": {
+      "type": "object",
+      "required": ["city"],
+      "properties": {
+        "city": { "type": "string" },
+        "ward": { "type": "string" },
+        "neighborhood": { "type": "string" },
+        "moved_in": { "type": "string" },
+        "home_type": { "type": "string" }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "required": ["no_real_person_likeness", "ai_disclosure_required"],
+      "properties": {
+        "no_real_person_likeness": { "const": true },
+        "ai_disclosure_required": { "const": true }
+      }
+    }
+  }
+}

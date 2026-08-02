@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Wardrobe",
+  "type": "object",
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "brand", "acquired_date", "seasons", "verified"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^itm_" },
+          "category": {
+            "type": "string",
+            "enum": ["tops", "bottoms", "outer", "shoes", "bag", "accessory", "dress", "underlayer"]
+          },
+          "brand": { "type": "string" },
+          "product": { "type": "string" },
+          "sku": { "type": ["string", "null"] },
+          "color": { "type": "string" },
+          "size": { "type": ["string", "null"] },
+          "price_jpy": { "type": ["integer", "null"] },
+          "release_date": { "type": ["string", "null"], "description": "実際の発売日。これより前の投稿では着られない。" },
+          "acquired_date": { "type": ["string", "null"], "description": "本人が入手した日。これより前の投稿では着られない。" },
+          "seasons": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["spring", "summer", "autumn", "winter"] }
+          },
+          "verified": { "type": "boolean" },
+          "source": { "type": ["string", "null"] },
+          "wear_notes": { "type": "string", "description": "経年変化。新品状態で描画し続けるのが不自然さの原因になる。" },
+          "retire_date": { "type": ["string", "null"], "description": "これ以降は着ない" }
+        }
+      }
+    }
+  }
+}

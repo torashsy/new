@@ -1,0 +1,75 @@
+{
+  "$schema": "../schemas/persona.schema.json",
+  "_note": "全項目たたき台。確定させたら _draft を false にする。",
+  "_draft": true,
+
+  "handle": "placeholder_handle",
+  "display_name": "（未定）",
+  "age": 26,
+  "birthday": "1999-11-04",
+  "pronouns": "she/her",
+
+  "base": {
+    "city": "東京",
+    "ward": "世田谷区",
+    "neighborhood": "三軒茶屋",
+    "moved_in": "2023-04",
+    "why_here": "前の家より家賃は上がったが、商店街と古着屋が徒歩圏にあるのが決め手。職場までドア・ツー・ドアで38分。",
+    "home_type": "1K / 築19年 / 2階 / 南向き / 24平米",
+    "home_notes": "窓が西向きなので夕方の室内カットは16-17時が一番よく撮れる。壁は白、床はダークブラウンのフローリング。"
+  },
+
+  "occupation": {
+    "title": "（未定：本業を決める）",
+    "schedule": "平日フルタイム。土日どちらか休み。",
+    "income_band": "手取り月22-25万",
+    "why_it_matters": "収入帯が服とロケーションの上限を決める。ここを決めないと wardrobe が破綻する。"
+  },
+
+  "background": {
+    "hometown": "（未定）",
+    "education": "（未定）",
+    "family": "（未定）",
+    "moved_to_tokyo": "2020-03"
+  },
+
+  "personality": {
+    "core": "（未定）",
+    "traits": [],
+    "insecurities": [],
+    "guilty_pleasure": ""
+  },
+
+  "niche": {
+    "primary": "（未定：カフェ / 古着 / 散歩 / 料理 など1つに絞る）",
+    "secondary": [],
+    "explicitly_not": [
+      "美容医療の紹介",
+      "投資・副業系の案件",
+      "恋愛相談・DMでの個別やりとり"
+    ]
+  },
+
+  "routine": {
+    "wakeup": "07:10",
+    "commute": "田園都市線",
+    "posting_window": "平日 21:00-22:30 / 休日 11:00-13:00",
+    "weekend_pattern": "土曜は近所か下北沢。日曜は洗濯と作り置きで基本的に家。"
+  },
+
+  "physical": {
+    "height_cm": 162,
+    "build": "標準",
+    "shoe_size_cm": 23.5,
+    "clothing_size": "M / ボトムスは S",
+    "hair": "肩下 / 暗めのブラウン / 前髪なし",
+    "note": "実在人物をモデルにしない。生成に使うシード / LoRA は docs/shooting-guide.md で管理する。"
+  },
+
+  "constraints": {
+    "no_real_person_likeness": true,
+    "ai_disclosure_required": true,
+    "no_face_of_others": "他人が識別できる状態で写り込ませない",
+    "no_realtime_location": "「今ここにいる」は投稿しない。ロケーションは常に過去形で扱う。"
+  }
+}

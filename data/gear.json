@@ -1,0 +1,57 @@
+{
+  "$schema": "../schemas/gear.schema.json",
+  "_note": "撮影機材。EXIF の整合性はここが基準。仕様は必ずメーカーの公式スペックで裏を取る。",
+
+  "devices": [
+    {
+      "id": "gear_phone",
+      "role": "primary",
+      "kind": "smartphone",
+      "brand": "Apple",
+      "model": "iPhone 14",
+      "acquired_date": "2023-02-04",
+      "release_date": "2022-09-16",
+      "verified": false,
+      "source": null,
+      "color": "スターライト",
+      "case": "クリアケース。角に擦り傷。",
+      "lenses": [
+        { "name": "main", "focal_length_mm": 26, "aperture": "f/1.5", "sensor": "26mm相当" },
+        { "name": "ultrawide", "focal_length_mm": 13, "aperture": "f/2.4", "sensor": "13mm相当" }
+      ],
+      "aspect_ratios": ["4:3", "16:9", "1:1"],
+      "default_aspect": "4:3",
+      "iso_range": [32, 6400],
+      "notes": "ポートレートモードは f/1.5 相当のボケ。望遠がないので寄りのカットは足で寄るか main のクロップ。85mm 相当の圧縮感が出たらこの機種では撮れない。"
+    },
+    {
+      "id": "gear_film",
+      "role": "secondary",
+      "kind": "film_camera",
+      "brand": "（未定）",
+      "model": "（未定：コンパクトフィルム機）",
+      "acquired_date": null,
+      "release_date": null,
+      "verified": false,
+      "source": null,
+      "lenses": [{ "name": "fixed", "focal_length_mm": 35, "aperture": "f/2.8", "sensor": "35mm判" }],
+      "aspect_ratios": ["3:2"],
+      "default_aspect": "3:2",
+      "film_stock": "（未定）",
+      "notes": "フィルム設定を入れるなら現像ラグ（撮影日と投稿日が2-3週間ずれる）を投稿に反映させること。これは強い実在感になる一方、日付管理が一気に難しくなる。導入するか要判断。"
+    }
+  ],
+
+  "shooting_defaults": {
+    "who_shoots": "基本は自撮り or 三脚 + セルフタイマー。他人に撮ってもらったカットは「誰が撮ったのか」の説明がつく状況でのみ使う。",
+    "self_timer": true,
+    "tripod": "ミニ三脚（卓上）のみ所持。目線より上の高さからは撮れない。",
+    "editing": "彩度は上げすぎない。iPhone 標準の写真アプリ + Lightroom モバイルのプリセット1種類のみを使い回す（現像の癖を一定にする）。",
+    "consistency_rules": [
+      "焦点距離は gear の lenses に存在する値のみ",
+      "アスペクト比は device の aspect_ratios のみ",
+      "手持ちの機材で物理的に不可能なアングル（俯瞰・高所・三人称視点）は使わない",
+      "撮影時刻の光と、投稿本文の時間帯を一致させる"
+    ]
+  }
+}

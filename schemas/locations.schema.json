@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Locations",
+  "type": "object",
+  "required": ["locations"],
+  "properties": {
+    "locations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "city", "type", "real", "verified", "photo_allowed"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^loc_" },
+          "name": { "type": "string" },
+          "city": { "type": "string" },
+          "area": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["home", "public_park", "shopping_street", "cafe", "restaurant", "station", "shop", "street", "other"]
+          },
+          "real": { "type": "boolean", "description": "実在の場所か。false は自宅など架空のもの。" },
+          "verified": { "type": "boolean", "description": "一次情報で裏を取ったか" },
+          "source": { "type": ["string", "null"] },
+          "photo_allowed": { "type": "boolean", "description": "撮影・掲載してよい場所か" },
+          "open_hours": { "type": ["object", "null"] },
+          "access_from_home_min": { "type": "integer" },
+          "access_mode": { "type": "string" },
+          "light": { "type": "object" },
+          "crowd": { "type": "object" },
+          "usage_notes": { "type": "string" },
+          "seasonal": { "type": "string" }
+        }
+      }
+    }
+  }
+}
