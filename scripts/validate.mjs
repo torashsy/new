@@ -108,11 +108,38 @@ for (const p of posts) {
       err(at, `${label} が未検証 (verified:false) のまま公開されようとしている`);
   }
 
-  // カテゴリの抜け
+  // カテゴリの抜け（自宅では靴を履いていないのが自然なので除外）
+  const atHome = loc?.type === "home";
   const cats = new Set(p.outfit.map((id) => itemMap.get(id)?.category));
-  for (const need of ["tops", "bottoms", "shoes"]) {
+  for (const need of atHome ? ["tops", "bottoms"] : ["tops", "bottoms", "shoes"]) {
     if (!cats.has(need)) warn(at, `コーデに ${need} がない`);
   }
+
+  // 平日 / 休日と服のモード（自宅は部屋着なので対象外）
+  const dow = new Date(`${p.date}T00:00:00Z`).getUTCDay(); // 0=日
+  const isWeekend = dow === 0 || dow === 6;
+  if (!atHome) {
+    for (const id of p.outfit) {
+      const item = itemMap.get(id);
+      if (!item?.mode || item.mode === "both") continue;
+      if (item.mode === "weekday" && isWeekend)
+        warn(at, `${item.brand} ${item.product ?? ""} は通勤服だが休日に着ている`);
+      if (item.mode === "weekend" && !isWeekend)
+        warn(at, `${item.brand} ${item.product ?? ""} は休日服だが平日に外で着ている`);
+    }
+  }
+
+  // 平日の勤務時間中に外にいないか
+  const work = persona.occupation?.schedule?.match(/(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
+  if (work && !isWeekend && p.time && !atHome) {
+    const [, from, to] = work;
+    const t = toMin(p.time.padStart(5, "0"));
+    if (t >= toMin(from.padStart(5, "0")) && t <= toMin(to.padStart(5, "0")))
+      err(at, `平日の勤務時間中 (${from}-${to}) に社外にいる`);
+  }
+
+  if (p.hashtags && p.hashtags.length > 5)
+    err(at, `ハッシュタグが${p.hashtags.length}個。Instagram の上限は5個（2025-12〜）`);
 
   if (!p.ai_label) {
     if (isLive(p)) err(at, "AI生成の表示 (ai_label) がないまま公開されようとしている");
@@ -152,6 +179,8 @@ const wearCount = new Map(items.map((i) => [i.id, 0]));
 const outfitSeen = new Map();
 for (const p of [...posts].sort((a, b) => a.date.localeCompare(b.date))) {
   for (const id of p.outfit) wearCount.set(id, (wearCount.get(id) ?? 0) + 1);
+  // 自宅の部屋着は繰り返すのが自然なので対象外
+  if (locMap.get(p.location_id)?.type === "home") continue;
   const key = [...p.outfit].sort().join("+");
   const prev = outfitSeen.get(key);
   if (prev && daysBetween(prev.date, p.date) < 90)
@@ -162,6 +191,18 @@ if (posts.length >= 10) {
   const once = items.filter((i) => wearCount.get(i.id) === 1);
   if (once.length > items.length / 2)
     warn("wardrobe", `${once.length}/${items.length} 点が1回しか着られていない。着回しがないのは不自然。`);
+}
+
+// 完成度の分布（docs/shooting-guide.md）——全部が決まっているのが一番不自然
+const recent = [...posts].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+if (recent.length >= 5) {
+  const n = (v) => recent.filter((p) => p.completion === v).length;
+  if (n("rough") === 0)
+    warn("completion", `直近${recent.length}投稿に「雑」な枚が1枚もない。全部が決まっているのが一番不自然。`);
+  if (n("polished") > Math.ceil(recent.length * 0.4))
+    warn("completion", `直近${recent.length}投稿のうち「決まっている」が${n("polished")}枚。多すぎる（目安は3割）。`);
+  const unset = recent.filter((p) => !p.completion).length;
+  if (unset) warn("completion", `completion が未設定の投稿が${unset}件`);
 }
 
 // 投稿間隔

@@ -1,67 +1,138 @@
 {
   "$schema": "../schemas/locations.schema.json",
-  "_note": "実在の場所のみ。営業時間・撮影可否は必ず一次情報で裏を取ってから verified:true にする。",
+  "_note": "中野区・新井薬師前を中心に、徒歩圏＋1-2駅圏で完結させる。移動距離を絞るほど整合性の破綻余地が減る。実在の場所の営業時間・撮影ルールは必ず一次情報で裏を取ってから verified:true にする。",
 
   "locations": [
     {
       "id": "loc_home",
-      "name": "自宅",
+      "name": "自宅（1K・中野区新井薬師前）",
       "city": "東京",
-      "area": "三軒茶屋",
+      "area": "新井薬師前",
       "type": "home",
       "real": false,
       "verified": true,
       "source": null,
       "photo_allowed": true,
       "open_hours": null,
+      "access_from_home_min": 0,
       "light": {
-        "best_time": "16:00-17:30",
-        "direction": "西向きの窓。夕方は強い斜光が入る。",
-        "note": "午前中は北側の間接光のみで色温度が高くなる。"
+        "best_time": "07:00-09:00",
+        "direction": "東向きの窓。朝だけ直射が入り、午後は間接光のみ。",
+        "note": "夕方の斜光は物理的に入らない。オレンジの逆光カットをこの部屋で作ったら破綻。"
       },
-      "usage_notes": "生活感のカットはここ。同じ壁・同じ床が繰り返し写るので、家具の配置を変えたら posts に記録すること。"
+      "usage_notes": "全投稿の6割はここ。21平米なので引きが撮れず、超広角(13mm)か寄りの二択になる。同じ壁・同じ床・同じカーテンが繰り返し写るので、家具を動かしたら posts の notes に記録する。生活の変化（新しいラグ、増えた本）は投稿の時系列と一致させる。",
+      "recurring_props": ["アイボリーの遮光カーテン", "ニトリの折りたたみローテーブル", "無印のラタンのかご", "白い電気ケトル"]
     },
     {
-      "id": "loc_setagaya_park",
-      "name": "世田谷公園",
+      "id": "loc_office",
+      "name": "勤務先（新宿）",
       "city": "東京",
-      "area": "池尻",
+      "area": "新宿",
+      "type": "other",
+      "real": false,
+      "verified": true,
+      "source": null,
+      "photo_allowed": false,
+      "open_hours": { "mon_fri": "09:30-18:15" },
+      "access_from_home_min": 25,
+      "access_mode": "西武新宿線＋JR（高田馬場乗換）",
+      "usage_notes": "撮影不可。勤務先が特定できる要素は一切写さない。平日日中の居場所としてスケジュール上の存在意義はあるが、投稿には絶対に出さない。",
+      "warning": "photo_allowed:false — このロケーションで投稿を作ってはいけない"
+    },
+    {
+      "id": "loc_tetsugakudo",
+      "name": "哲学堂公園",
+      "city": "東京",
+      "area": "中野区松が丘",
       "type": "public_park",
       "real": true,
       "verified": false,
       "source": null,
       "photo_allowed": true,
-      "open_hours": { "mon_sun": "24h" },
-      "access_from_home_min": 12,
+      "open_hours": { "mon_sun": "08:00-18:00" },
+      "access_from_home_min": 13,
       "access_mode": "徒歩",
       "light": {
-        "best_time": "07:00-09:00 / 16:00-17:00",
-        "direction": "開けているので順光・逆光どちらも作れる"
+        "best_time": "08:00-10:00 / 15:00-17:00",
+        "direction": "樹木が多く、木漏れ日の斑が強く出る。曇天のほうが扱いやすい。"
       },
-      "crowd": { "weekday_am": "低", "weekend_pm": "高（家族連れ）" },
-      "usage_notes": "他人が写り込みやすい。人物が識別できるカットは不可。週末午後は避ける。",
-      "seasonal": "3月下旬に桜。11月中旬から紅葉。"
+      "crowd": { "weekday_am": "低", "weekend_pm": "中" },
+      "usage_notes": "自宅から徒歩圏の中で一番『どこかに出かけた感』が出せる場所。開園時間があるので早朝・夜の投稿は作れない。",
+      "seasonal": "3月下旬に桜、11月下旬から紅葉。梅もある。",
+      "todo": "開園時間・入園の可否・三脚使用の可否を公式（中野区）で確認すること"
     },
     {
-      "id": "loc_shimokita",
-      "name": "下北沢（古着屋街）",
+      "id": "loc_nakano_shopping",
+      "name": "中野の商店街（北口）",
       "city": "東京",
-      "area": "下北沢",
+      "area": "中野",
+      "type": "shopping_street",
+      "real": true,
+      "verified": false,
+      "source": null,
+      "photo_allowed": true,
+      "open_hours": { "mon_sun": "11:00-20:00" },
+      "access_from_home_min": 9,
+      "access_mode": "徒歩＋電車1駅",
+      "light": {
+        "best_time": "13:00-16:00",
+        "direction": "アーケード内は蛍光灯の混合光。色かぶりが出る。屋外部分との明暗差が大きい。"
+      },
+      "crowd": { "weekday_pm": "中", "weekend_pm": "高" },
+      "usage_notes": "背景として使うのみ。店舗の内部・商品・店名の看板・他人の顔は写さない。人通りが多いので、実質『引きは撮れない』と考えたほうがいい。",
+      "todo": "背景に写り込む店舗が特定可能にならないか、実際の画で確認する"
+    },
+    {
+      "id": "loc_koenji",
+      "name": "高円寺（古着屋の通り）",
+      "city": "東京",
+      "area": "高円寺",
       "type": "shopping_street",
       "real": true,
       "verified": false,
       "source": null,
       "photo_allowed": false,
       "open_hours": { "mon_sun": "12:00-20:00" },
-      "access_from_home_min": 18,
-      "access_mode": "電車（三軒茶屋→下北沢）",
-      "light": {
-        "best_time": "13:00-15:00",
-        "direction": "路地が狭く日陰が多い。晴天でも影が強く出る。"
-      },
-      "crowd": { "weekday_pm": "中", "weekend_pm": "高" },
-      "usage_notes": "店舗の内部・商品・店名の看板を無断で写さない。店先を背景に使う場合も店舗が特定できる形は避ける。路地の壁や植栽を背景に使うのが安全。",
-      "warning": "photo_allowed:false = 店舗の許諾なしに店内・商品を写した投稿は作らない"
+      "access_from_home_min": 22,
+      "access_mode": "電車（中野乗換）",
+      "light": { "best_time": "13:00-15:00", "direction": "路地が狭く日陰が多い。晴天でも影が硬い。" },
+      "crowd": { "weekend_pm": "高" },
+      "usage_notes": "学生時代（阿佐ヶ谷在住）の名残として月1程度。店内・商品の撮影は許諾なしには不可なので photo_allowed:false。路地の壁や植栽を背景に使うカットのみ、別ロケーションとして切り出して登録すること。",
+      "warning": "photo_allowed:false — 店舗が絡む投稿は作らない"
+    },
+    {
+      "id": "loc_shinjuku_gyoen",
+      "name": "新宿御苑",
+      "city": "東京",
+      "area": "新宿",
+      "type": "public_park",
+      "real": true,
+      "verified": false,
+      "source": null,
+      "photo_allowed": true,
+      "open_hours": { "mon_sun": "09:00-16:00" },
+      "access_from_home_min": 30,
+      "access_mode": "電車（新宿）",
+      "entry_fee_jpy": 500,
+      "light": { "best_time": "09:00-11:00", "direction": "開けた芝生があるので順光・逆光を作り分けられる。" },
+      "crowd": { "weekend_pm": "高" },
+      "usage_notes": "月1-2回の『ちょっと出かけた日』枠。入園料がかかるので頻度が高すぎると収入設定と矛盾する。",
+      "todo": "開園時間（季節で変動）、入園料、三脚・一脚の使用可否、営利目的撮影の扱いを環境省の公式ページで確認。三脚が禁止なら自撮り以外の全身カットが作れなくなるので、ここは必ず先に確認すること。"
+    },
+    {
+      "id": "loc_convenience",
+      "name": "近所のコンビニ（店名は出さない）",
+      "city": "東京",
+      "area": "新井薬師前",
+      "type": "shop",
+      "real": false,
+      "verified": true,
+      "source": null,
+      "photo_allowed": true,
+      "open_hours": { "mon_sun": "24h" },
+      "access_from_home_min": 3,
+      "access_mode": "徒歩",
+      "usage_notes": "店内は写さない。買ったものを自宅で撮る形でのみ登場させる。深夜のプリンはここ。店名・ロゴが判別できるパッケージの扱いに注意。"
     }
   ]
 }
