@@ -10,11 +10,21 @@ import { AXIS_IDS } from "./types";
 
 const SIZE = 120;
 const CENTER = SIZE / 2;
-const MIN_R = 22;
-const MAX_R = 54;
+const MIN_R = 14;
+const MAX_R = 58;
+const MID_R = (MIN_R + MAX_R) / 2;
 
+/**
+ * 診断の値は中央（50）付近に寄りやすい。線形に半径へ写すと、
+ * どの人もほぼ同じ円になって見分けがつかなくなる。
+ * 中央からのずれを 0.65 乗して増幅し、小さな差を形に出す。
+ */
 export function radii(axes: Axes): number[] {
-  return AXIS_IDS.map((id) => MIN_R + (axes[id] / 100) * (MAX_R - MIN_R));
+  return AXIS_IDS.map((id) => {
+    const dev = (axes[id] - 50) / 50; // -1..1
+    const amplified = Math.sign(dev) * Math.abs(dev) ** 0.65;
+    return MID_R + amplified * (MAX_R - MID_R);
+  });
 }
 
 /** 文字列から安定した 0..1 の値を作る（回転のばらつき用）。 */

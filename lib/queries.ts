@@ -2,6 +2,7 @@ import { readDb } from "./store";
 import { DAILY_QUESTIONS, questionForDate, today } from "./questions";
 import { matchScore, type MatchBreakdown } from "./score";
 import type { Answer, Connection, Exchange, User } from "./types";
+import { MAX_INTERESTS_PER_DAY } from "./limits";
 import { DEMO_USER_ID } from "./seed";
 
 export type Candidate = { user: User; breakdown: MatchBreakdown; latestAnswer: Answer | null; latestQuestionText: string | null };
@@ -42,9 +43,34 @@ export async function todayFeed(userId: string): Promise<Answer[] | null> {
   const q = questionForDate(today());
   const mine = db.answers.find((a) => a.userId === userId && a.questionId === q.id);
   if (!mine) return null;
+  const hidden = await hiddenUserIds(userId);
   return db.answers
-    .filter((a) => a.questionId === q.id && a.userId !== userId)
+    .filter((a) => a.questionId === q.id && a.userId !== userId && !hidden.has(a.userId))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+/** 自分がブロックした相手と、自分をブロックした相手。どちらも互いに見えなくする。 */
+export async function hiddenUserIds(userId: string): Promise<Set<string>> {
+  const db = await readDb();
+  const hidden = new Set<string>();
+  for (const b of db.blocks) {
+    if (b.fromUserId === userId) hidden.add(b.toUserId);
+    if (b.toUserId === userId) hidden.add(b.fromUserId);
+  }
+  return hidden;
+}
+
+export async function isBlockedByMe(userId: string, otherId: string): Promise<boolean> {
+  const db = await readDb();
+  return db.blocks.some((b) => b.fromUserId === userId && b.toUserId === otherId);
+}
+
+/** 今日すでに送った「もっと知りたい」の数と残り。 */
+export async function interestBudget(userId: string): Promise<{ used: number; left: number }> {
+  const db = await readDb();
+  const day = new Date().toISOString().slice(0, 10);
+  const used = db.interests.filter((i) => i.fromUserId === userId && i.createdAt.slice(0, 10) === day).length;
+  return { used, left: Math.max(0, MAX_INTERESTS_PER_DAY - used) };
 }
 
 export async function userMap(): Promise<Map<string, User>> {
@@ -65,6 +91,7 @@ export async function discover(userId: string, limit = 8): Promise<Candidate[]> 
     db.connections.filter((c) => c.userIds.includes(userId)).flatMap((c) => c.userIds),
   );
   const sentIds = new Set(db.interests.filter((i) => i.fromUserId === userId).map((i) => i.toUserId));
+  const hidden = await hiddenUserIds(userId);
 
   const corpus = db.users.filter((u) => u.axes).map((u) => u.tags);
   const myAnswers = db.answers.filter((a) => a.userId === userId);
@@ -73,6 +100,7 @@ export async function discover(userId: string, limit = 8): Promise<Candidate[]> 
   for (const other of db.users) {
     if (other.id === userId || !other.axes) continue;
     if (connectedIds.has(other.id) || sentIds.has(other.id)) continue;
+    if (hidden.has(other.id)) continue;
 
     const theirAnswers = db.answers
       .filter((a) => a.userId === other.id)
@@ -95,6 +123,7 @@ export async function discover(userId: string, limit = 8): Promise<Candidate[]> 
 export async function connectionsOf(userId: string): Promise<{ connection: Connection; other: User; exchanges: Exchange[] }[]> {
   const db = await readDb();
   const users = new Map(db.users.map((u) => [u.id, u]));
+  const hidden = await hiddenUserIds(userId);
   return db.connections
     .filter((c) => c.userIds.includes(userId))
     .map((connection) => {
@@ -107,7 +136,7 @@ export async function connectionsOf(userId: string): Promise<{ connection: Conne
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       };
     })
-    .filter((c) => c.other);
+    .filter((c) => c.other && !hidden.has(c.other.id));
 }
 
 export async function getExchange(id: string): Promise<{ exchange: Exchange; other: User; me: User } | null> {
@@ -125,9 +154,10 @@ export async function getExchange(id: string): Promise<{ exchange: Exchange; oth
 export async function incomingInterest(userId: string): Promise<User[]> {
   const db = await readDb();
   const sent = new Set(db.interests.filter((i) => i.fromUserId === userId).map((i) => i.toUserId));
+  const hidden = await hiddenUserIds(userId);
   const users = new Map(db.users.map((u) => [u.id, u]));
   return db.interests
-    .filter((i) => i.toUserId === userId && !sent.has(i.fromUserId))
+    .filter((i) => i.toUserId === userId && !sent.has(i.fromUserId) && !hidden.has(i.fromUserId))
     .map((i) => users.get(i.fromUserId))
     .filter((u): u is User => Boolean(u));
 }

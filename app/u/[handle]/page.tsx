@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { answersOf, getMe, getUserByHandle } from "@/lib/queries";
+import { answersOf, getMe, getUserByHandle, isBlockedByMe } from "@/lib/queries";
+import { SafetyControls } from "@/components/SafetyControls";
 import { DAILY_QUESTIONS } from "@/lib/questions";
 import { AXES, describeAxis } from "@/lib/axes";
 import { AXIS_IDS } from "@/lib/types";
@@ -20,6 +21,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ handle
   const me = await getMe();
   const isMe = user.id === me.id;
   const answers = (await answersOf(user.id)).slice(0, 12);
+  const blocked = isMe ? false : await isBlockedByMe(me.id, user.id);
 
   return (
     <div className="space-y-9">
@@ -89,6 +91,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ handle
           </ul>
         )}
       </section>
+
+      {!isMe && (
+        <SafetyControls targetUserId={user.id} targetHandle={user.handle} blocked={blocked} />
+      )}
     </div>
   );
 }

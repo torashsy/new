@@ -141,10 +141,21 @@ describe("かたち", () => {
     assert.notEqual(shapePath(axes({ pace: 10 })), shapePath(axes({ pace: 90 })));
   });
 
+  test("中央付近のわずかな差も半径の差として出る（増幅が効いている）", () => {
+    const [a] = radii(axes({ pace: 50 }));
+    const [b] = radii(axes({ pace: 60 }));
+    // 線形なら差は 4.4 程度。増幅により、それより大きく開くこと。
+    assert.ok(Math.abs(b - a) > 6, `差が ${Math.abs(b - a).toFixed(1)} しかない`);
+  });
+
+  test("中央(50)はちょうど中間の半径になる", () => {
+    for (const r of radii(axes())) assert.equal(Math.round(r), 36);
+  });
+
   test("半径が想定の範囲に収まる（極端な診断でも破綻しない）", () => {
     for (const v of [0, 50, 100]) {
       for (const r of radii(axes({ pace: v, plan: v, depth: v, logic: v, novelty: v, expression: v }))) {
-        assert.ok(r >= 22 && r <= 54, `半径 ${r} が範囲外`);
+        assert.ok(r >= 14 && r <= 58, `半径 ${r} が範囲外`);
       }
     }
   });

@@ -6,8 +6,9 @@ import { mutate, newId } from "@/lib/store";
 import { questionForDate, today, EXCHANGE_PROMPTS } from "@/lib/questions";
 import { scoreDiagnostic } from "@/lib/axes";
 import { DEMO_USER_ID } from "@/lib/seed";
-import type { Connection } from "@/lib/types";
-import { ANSWER_LIMIT, BIO_LIMIT, MAX_TAGS } from "@/lib/limits";
+import type { Connection, ReportReason } from "@/lib/types";
+import { REPORT_REASONS } from "@/lib/types";
+import { ANSWER_LIMIT, BIO_LIMIT, MAX_TAGS, MAX_INTERESTS_PER_DAY } from "@/lib/limits";
 
 export async function submitAnswer(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim().slice(0, ANSWER_LIMIT);
@@ -77,8 +78,22 @@ export async function sendInterest(formData: FormData) {
   if (!toUserId || toUserId === DEMO_USER_ID) return;
 
   const connectionId = await mutate((db): string | null => {
+    // ブロックしている / されている相手には送れない
+    const blocked = db.blocks.some(
+      (b) =>
+        (b.fromUserId === DEMO_USER_ID && b.toUserId === toUserId) ||
+        (b.fromUserId === toUserId && b.toUserId === DEMO_USER_ID),
+    );
+    if (blocked) return null;
+
     const already = db.interests.find((i) => i.fromUserId === DEMO_USER_ID && i.toUserId === toUserId);
     if (!already) {
+      const day = new Date().toISOString().slice(0, 10);
+      const sentToday = db.interests.filter(
+        (i) => i.fromUserId === DEMO_USER_ID && i.createdAt.slice(0, 10) === day,
+      ).length;
+      if (sentToday >= MAX_INTERESTS_PER_DAY) return null;
+
       db.interests.push({
         id: newId("int"),
         fromUserId: DEMO_USER_ID,
@@ -182,4 +197,68 @@ export async function simulateExchangeReply(formData: FormData) {
   });
 
   revalidatePath(`/exchange/${exchangeId}`);
+}
+
+/**
+ * ブロック。相手からも自分からも、あらゆる画面で見えなくなる。
+ * ブロックしたことは相手に知らされない。既存のつながりも隠れる。
+ */
+export async function blockUser(formData: FormData) {
+  const toUserId = String(formData.get("toUserId") ?? "");
+  if (!toUserId || toUserId === DEMO_USER_ID) return;
+
+  await mutate((db) => {
+    if (db.blocks.some((b) => b.fromUserId === DEMO_USER_ID && b.toUserId === toUserId)) return;
+    db.blocks.push({
+      id: newId("blk"),
+      fromUserId: DEMO_USER_ID,
+      toUserId,
+      createdAt: new Date().toISOString(),
+    });
+  });
+
+  revalidatePath("/", "layout");
+  redirect("/discover");
+}
+
+export async function unblockUser(formData: FormData) {
+  const toUserId = String(formData.get("toUserId") ?? "");
+  if (!toUserId) return;
+  await mutate((db) => {
+    db.blocks = db.blocks.filter((b) => !(b.fromUserId === DEMO_USER_ID && b.toUserId === toUserId));
+  });
+  revalidatePath("/", "layout");
+}
+
+/** 通報。ブロックとは独立して行える（通報だけして関係は続けたい場合がある）。 */
+export async function reportUser(formData: FormData) {
+  const toUserId = String(formData.get("toUserId") ?? "");
+  const reason = String(formData.get("reason") ?? "") as ReportReason;
+  const note = String(formData.get("note") ?? "").trim().slice(0, 500);
+  const contextId = String(formData.get("contextId") ?? "") || null;
+  const alsoBlock = formData.get("alsoBlock") === "on";
+  if (!toUserId || !REPORT_REASONS.includes(reason)) return;
+
+  await mutate((db) => {
+    db.reports.push({
+      id: newId("rep"),
+      fromUserId: DEMO_USER_ID,
+      toUserId,
+      reason,
+      contextId,
+      note,
+      createdAt: new Date().toISOString(),
+    });
+    if (alsoBlock && !db.blocks.some((b) => b.fromUserId === DEMO_USER_ID && b.toUserId === toUserId)) {
+      db.blocks.push({
+        id: newId("blk"),
+        fromUserId: DEMO_USER_ID,
+        toUserId,
+        createdAt: new Date().toISOString(),
+      });
+    }
+  });
+
+  revalidatePath("/", "layout");
+  redirect("/discover");
 }

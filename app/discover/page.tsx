@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { discover, getMe, incomingInterest } from "@/lib/queries";
+import { discover, getMe, incomingInterest, interestBudget } from "@/lib/queries";
+import { MAX_INTERESTS_PER_DAY } from "@/lib/limits";
 import { explain } from "@/lib/score";
 import { sendInterest, simulateInterestFrom } from "../actions";
 import { Shape } from "@/components/Shape";
@@ -21,6 +22,7 @@ export default async function DiscoverPage() {
 
   const candidates = await discover(me.id);
   const incoming = await incomingInterest(me.id);
+  const budget = await interestBudget(me.id);
 
   return (
     <div className="space-y-9">
@@ -28,6 +30,10 @@ export default async function DiscoverPage() {
         <h1 className="text-sm text-[var(--color-ink-soft)]">近いかもしれない人</h1>
         <p className="text-xs leading-relaxed text-[var(--color-ink-soft)]">
           出てくる理由は必ず添えています。理由の言えない推薦はしません。
+        </p>
+        <p className="text-xs text-[var(--color-ink-soft)]">
+          今日あと{budget.left}人に「もっと知りたい」を送れます（1日{MAX_INTERESTS_PER_DAY}人まで）。
+          {budget.left === 0 && " 全員に送れてしまうと、選ぶことの意味がなくなるので。"}
         </p>
       </header>
 
@@ -90,7 +96,8 @@ export default async function DiscoverPage() {
                   <input type="hidden" name="toUserId" value={user.id} />
                   <button
                     type="submit"
-                    className="rounded-full border border-[var(--color-ink)] px-4 py-1.5 text-xs"
+                    disabled={budget.left === 0}
+                    className="rounded-full border border-[var(--color-ink)] px-4 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-35"
                   >
                     もっと知りたい
                   </button>

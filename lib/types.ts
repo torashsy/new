@@ -74,12 +74,53 @@ export type Exchange = {
   createdAt: string;
 };
 
+/**
+ * ブロック。相手からは自分が、自分からは相手が、あらゆる画面で見えなくなる。
+ * ブロックしたことは相手に知らされない。
+ */
+export type Block = {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  createdAt: string;
+};
+
+export const REPORT_REASONS = [
+  "attack", // 攻撃的・侮辱的
+  "sexual", // 性的な内容
+  "commercial", // 勧誘・宣伝
+  "impersonation", // なりすまし
+  "other",
+] as const;
+export type ReportReason = (typeof REPORT_REASONS)[number];
+
+export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
+  attack: "攻撃的・侮辱的な内容",
+  sexual: "性的な内容",
+  commercial: "勧誘・宣伝",
+  impersonation: "なりすまし",
+  other: "その他",
+};
+
+export type Report = {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  reason: ReportReason;
+  /** 対象の回答や交換があれば記録する。 */
+  contextId: string | null;
+  note: string;
+  createdAt: string;
+};
+
 export type Database = {
   users: User[];
   answers: Answer[];
   interests: Interest[];
   connections: Connection[];
   exchanges: Exchange[];
+  blocks: Block[];
+  reports: Report[];
 };
 
 export const emptyDatabase = (): Database => ({
@@ -88,4 +129,6 @@ export const emptyDatabase = (): Database => ({
   interests: [],
   connections: [],
   exchanges: [],
+  blocks: [],
+  reports: [],
 });
