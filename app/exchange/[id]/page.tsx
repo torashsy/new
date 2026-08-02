@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getExchange } from "@/lib/queries";
+import { requireViewer } from "@/lib/viewer";
 import { answerExchange, simulateExchangeReply } from "../../actions";
 import { ANSWER_LIMIT } from "@/lib/limits";
 import { Shape } from "@/components/Shape";
@@ -11,7 +12,8 @@ export const dynamic = "force-dynamic";
 
 export default async function ExchangePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const data = await getExchange(id);
+  const viewer = await requireViewer();
+  const data = await getExchange(id, viewer.id);
   if (!data) notFound();
 
   const { exchange, other, me } = data;

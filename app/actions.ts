@@ -5,7 +5,14 @@ import { redirect } from "next/navigation";
 import { mutate, newId } from "@/lib/store";
 import { questionForDate, today, EXCHANGE_PROMPTS } from "@/lib/questions";
 import { scoreDiagnostic } from "@/lib/axes";
-import { DEMO_USER_ID } from "@/lib/seed";
+import { currentUserId, clearSession } from "@/lib/session";
+
+/** ログインしていなければ操作させない。 */
+async function viewerId(): Promise<string> {
+  const id = await currentUserId();
+  if (!id) redirect("/signin");
+  return id;
+}
 import type { Connection, Gender, ReportReason } from "@/lib/types";
 import { REPORT_REASONS, GENDERS } from "@/lib/types";
 import { isRegion } from "@/lib/regions";
@@ -13,19 +20,20 @@ import { ANSWER_LIMIT, BIO_LIMIT, MAX_TAGS, MAX_INTERESTS_PER_DAY } from "@/lib/
 import { DEFAULT_PREFERENCE } from "@/lib/types";
 
 export async function submitAnswer(formData: FormData) {
+  const viewer = await viewerId();
   const body = String(formData.get("body") ?? "").trim().slice(0, ANSWER_LIMIT);
   if (!body) return;
   const q = questionForDate(today());
 
   await mutate((db) => {
-    const existing = db.answers.find((a) => a.userId === DEMO_USER_ID && a.questionId === q.id);
+    const existing = db.answers.find((a) => a.userId === viewer && a.questionId === q.id);
     if (existing) {
       existing.body = body;
       return;
     }
     db.answers.push({
       id: newId("ans"),
-      userId: DEMO_USER_ID,
+      userId: viewer,
       questionId: q.id,
       body,
       createdAt: new Date().toISOString(),
@@ -37,6 +45,7 @@ export async function submitAnswer(formData: FormData) {
 }
 
 export async function saveDiagnostic(formData: FormData) {
+  const viewer = await viewerId();
   const responses: Record<string, number> = {};
   for (const [key, value] of formData.entries()) {
     if (key.startsWith("q")) responses[key] = Number(value);
@@ -44,7 +53,7 @@ export async function saveDiagnostic(formData: FormData) {
   const axes = scoreDiagnostic(responses);
 
   await mutate((db) => {
-    const me = db.users.find((u) => u.id === DEMO_USER_ID);
+    const me = db.users.find((u) => u.id === viewer);
     if (me) me.axes = axes;
   });
 
@@ -53,6 +62,7 @@ export async function saveDiagnostic(formData: FormData) {
 }
 
 export async function saveProfile(formData: FormData) {
+  const viewer = await viewerId();
   const bio = String(formData.get("bio") ?? "").trim().slice(0, BIO_LIMIT);
   const tags = String(formData.get("tags") ?? "")
     .split(/[\s,、]+/)
@@ -87,7 +97,7 @@ export async function saveProfile(formData: FormData) {
   const regionScope = formData.get("regionScope") === "same" ? "same" : "any";
 
   await mutate((db) => {
-    const me = db.users.find((u) => u.id === DEMO_USER_ID);
+    const me = db.users.find((u) => u.id === viewer);
     if (!me) return;
     me.bio = bio;
     me.tags = [...new Set(tags)];
@@ -112,38 +122,39 @@ export async function saveProfile(formData: FormData) {
  * 送った事実は相手に通知されない（送り返されるまで relationship は始まらない）。
  */
 export async function sendInterest(formData: FormData) {
+  const viewer = await viewerId();
   const toUserId = String(formData.get("toUserId") ?? "");
-  if (!toUserId || toUserId === DEMO_USER_ID) return;
+  if (!toUserId || toUserId === viewer) return;
 
   const connectionId = await mutate((db): string | null => {
     // ブロックしている / されている相手には送れない
     const blocked = db.blocks.some(
       (b) =>
-        (b.fromUserId === DEMO_USER_ID && b.toUserId === toUserId) ||
-        (b.fromUserId === toUserId && b.toUserId === DEMO_USER_ID),
+        (b.fromUserId === viewer && b.toUserId === toUserId) ||
+        (b.fromUserId === toUserId && b.toUserId === viewer),
     );
     if (blocked) return null;
 
-    const already = db.interests.find((i) => i.fromUserId === DEMO_USER_ID && i.toUserId === toUserId);
+    const already = db.interests.find((i) => i.fromUserId === viewer && i.toUserId === toUserId);
     if (!already) {
       const day = new Date().toISOString().slice(0, 10);
       const sentToday = db.interests.filter(
-        (i) => i.fromUserId === DEMO_USER_ID && i.createdAt.slice(0, 10) === day,
+        (i) => i.fromUserId === viewer && i.createdAt.slice(0, 10) === day,
       ).length;
       if (sentToday >= MAX_INTERESTS_PER_DAY) return null;
 
       db.interests.push({
         id: newId("int"),
-        fromUserId: DEMO_USER_ID,
+        fromUserId: viewer,
         toUserId,
         createdAt: new Date().toISOString(),
       });
     }
 
-    const reciprocal = db.interests.find((i) => i.fromUserId === toUserId && i.toUserId === DEMO_USER_ID);
+    const reciprocal = db.interests.find((i) => i.fromUserId === toUserId && i.toUserId === viewer);
     if (!reciprocal) return null;
 
-    const pair = [DEMO_USER_ID, toUserId].sort() as [string, string];
+    const pair = [viewer, toUserId].sort() as [string, string];
     const existing = db.connections.find((c) => c.userIds[0] === pair[0] && c.userIds[1] === pair[1]);
     if (existing) return existing.id;
 
@@ -163,15 +174,16 @@ export async function sendInterest(formData: FormData) {
 
 /** デモ用: 相手からの「もっと知りたい」を発生させて相互成立を試せるようにする。 */
 export async function simulateInterestFrom(formData: FormData) {
+  const viewer = await viewerId();
   const fromUserId = String(formData.get("fromUserId") ?? "");
   if (!fromUserId) return;
   await mutate((db) => {
-    const already = db.interests.find((i) => i.fromUserId === fromUserId && i.toUserId === DEMO_USER_ID);
+    const already = db.interests.find((i) => i.fromUserId === fromUserId && i.toUserId === viewer);
     if (already) return;
     db.interests.push({
       id: newId("int"),
       fromUserId,
-      toUserId: DEMO_USER_ID,
+      toUserId: viewer,
       createdAt: new Date().toISOString(),
     });
   });
@@ -179,6 +191,7 @@ export async function simulateInterestFrom(formData: FormData) {
 }
 
 export async function openExchange(formData: FormData) {
+  const viewer = await viewerId();
   const connectionId = String(formData.get("connectionId") ?? "");
   const promptId = String(formData.get("promptId") ?? "");
   const prompt = EXCHANGE_PROMPTS.find((p) => p.id === promptId);
@@ -191,7 +204,7 @@ export async function openExchange(formData: FormData) {
       connectionId,
       promptId: prompt.id,
       promptText: prompt.text,
-      openedBy: DEMO_USER_ID,
+      openedBy: viewer,
       answers: [],
       createdAt: new Date().toISOString(),
     });
@@ -203,6 +216,7 @@ export async function openExchange(formData: FormData) {
 }
 
 export async function answerExchange(formData: FormData) {
+  const viewer = await viewerId();
   const exchangeId = String(formData.get("exchangeId") ?? "");
   const body = String(formData.get("body") ?? "").trim().slice(0, ANSWER_LIMIT);
   if (!exchangeId || !body) return;
@@ -210,12 +224,12 @@ export async function answerExchange(formData: FormData) {
   await mutate((db) => {
     const exchange = db.exchanges.find((e) => e.id === exchangeId);
     if (!exchange) return;
-    const mine = exchange.answers.find((a) => a.userId === DEMO_USER_ID);
+    const mine = exchange.answers.find((a) => a.userId === viewer);
     if (mine) {
       mine.body = body;
       return;
     }
-    exchange.answers.push({ userId: DEMO_USER_ID, body, createdAt: new Date().toISOString() });
+    exchange.answers.push({ userId: viewer, body, createdAt: new Date().toISOString() });
   });
 
   revalidatePath(`/exchange/${exchangeId}`);
@@ -223,6 +237,7 @@ export async function answerExchange(formData: FormData) {
 
 /** デモ用: 相手が答えた状態にする。 */
 export async function simulateExchangeReply(formData: FormData) {
+  const viewer = await viewerId();
   const exchangeId = String(formData.get("exchangeId") ?? "");
   const userId = String(formData.get("userId") ?? "");
   const body = String(formData.get("body") ?? "").trim();
@@ -242,14 +257,15 @@ export async function simulateExchangeReply(formData: FormData) {
  * ブロックしたことは相手に知らされない。既存のつながりも隠れる。
  */
 export async function blockUser(formData: FormData) {
+  const viewer = await viewerId();
   const toUserId = String(formData.get("toUserId") ?? "");
-  if (!toUserId || toUserId === DEMO_USER_ID) return;
+  if (!toUserId || toUserId === viewer) return;
 
   await mutate((db) => {
-    if (db.blocks.some((b) => b.fromUserId === DEMO_USER_ID && b.toUserId === toUserId)) return;
+    if (db.blocks.some((b) => b.fromUserId === viewer && b.toUserId === toUserId)) return;
     db.blocks.push({
       id: newId("blk"),
-      fromUserId: DEMO_USER_ID,
+      fromUserId: viewer,
       toUserId,
       createdAt: new Date().toISOString(),
     });
@@ -260,16 +276,18 @@ export async function blockUser(formData: FormData) {
 }
 
 export async function unblockUser(formData: FormData) {
+  const viewer = await viewerId();
   const toUserId = String(formData.get("toUserId") ?? "");
   if (!toUserId) return;
   await mutate((db) => {
-    db.blocks = db.blocks.filter((b) => !(b.fromUserId === DEMO_USER_ID && b.toUserId === toUserId));
+    db.blocks = db.blocks.filter((b) => !(b.fromUserId === viewer && b.toUserId === toUserId));
   });
   revalidatePath("/", "layout");
 }
 
 /** 通報。ブロックとは独立して行える（通報だけして関係は続けたい場合がある）。 */
 export async function reportUser(formData: FormData) {
+  const viewer = await viewerId();
   const toUserId = String(formData.get("toUserId") ?? "");
   const reason = String(formData.get("reason") ?? "") as ReportReason;
   const note = String(formData.get("note") ?? "").trim().slice(0, 500);
@@ -280,17 +298,17 @@ export async function reportUser(formData: FormData) {
   await mutate((db) => {
     db.reports.push({
       id: newId("rep"),
-      fromUserId: DEMO_USER_ID,
+      fromUserId: viewer,
       toUserId,
       reason,
       contextId,
       note,
       createdAt: new Date().toISOString(),
     });
-    if (alsoBlock && !db.blocks.some((b) => b.fromUserId === DEMO_USER_ID && b.toUserId === toUserId)) {
+    if (alsoBlock && !db.blocks.some((b) => b.fromUserId === viewer && b.toUserId === toUserId)) {
       db.blocks.push({
         id: newId("blk"),
-        fromUserId: DEMO_USER_ID,
+        fromUserId: viewer,
         toUserId,
         createdAt: new Date().toISOString(),
       });
@@ -299,4 +317,10 @@ export async function reportUser(formData: FormData) {
 
   revalidatePath("/", "layout");
   redirect("/discover");
+}
+
+export async function signOut() {
+  await clearSession();
+  revalidatePath("/", "layout");
+  redirect("/signin");
 }

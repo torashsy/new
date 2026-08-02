@@ -1,5 +1,6 @@
+import { requireViewer } from "@/lib/viewer";
 import Link from "next/link";
-import { discover, getMe, incomingInterest, interestBudget, whyNoCandidates } from "@/lib/queries";
+import {discover, incomingInterest, interestBudget, whyNoCandidates} from "@/lib/queries";
 import { ageOf, isProfileComplete, GENDER_LABELS } from "@/lib/types";
 import { MAX_INTERESTS_PER_DAY } from "@/lib/limits";
 import { explain } from "@/lib/score";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 
 export default async function DiscoverPage() {
-  const me = await getMe();
+  const me = await requireViewer();
 
   if (!me.axes) {
     return (

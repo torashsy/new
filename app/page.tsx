@@ -1,5 +1,6 @@
+import { requireViewer } from "@/lib/viewer";
 import Link from "next/link";
-import { getMe, myAnswerToday, todayFeed, userMap } from "@/lib/queries";
+import {myAnswerToday, todayFeed, userMap} from "@/lib/queries";
 import { questionForDate, today } from "@/lib/questions";
 import { submitAnswer } from "./actions";
 import { ANSWER_LIMIT } from "@/lib/limits";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 
 export default async function HomePage() {
-  const me = await getMe();
+  const me = await requireViewer();
   const question = questionForDate(today());
   const mine = await myAnswerToday(me.id);
   const feed = await todayFeed(me.id);

@@ -1,5 +1,6 @@
+import { requireViewer } from "@/lib/viewer";
 import Link from "next/link";
-import { connectionsOf, getMe } from "@/lib/queries";
+import {connectionsOf} from "@/lib/queries";
 import { EXCHANGE_PROMPTS } from "@/lib/questions";
 import { openExchange } from "../actions";
 import { Shape } from "@/components/Shape";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 
 export default async function ConnectionsPage() {
-  const me = await getMe();
+  const me = await requireViewer();
   const connections = await connectionsOf(me.id);
 
   if (connections.length === 0) {

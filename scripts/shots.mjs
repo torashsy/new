@@ -25,10 +25,16 @@ const shot = async (name, url, prepare) => {
   console.log(`${name}  ${url}`);
 };
 
+// パスキーなしでは中に入れないので、まず開発用の入口でログインする
+await shot("0-signin", "/signin");
+await page.getByRole("button", { name: /みずいろとして入る/ }).click();
+await page.waitForURL((url) => !url.pathname.startsWith("/signin"), { timeout: 15000 });
+
 await shot("1-today", "/");
 await shot("2-diagnostic", "/diagnostic");
 await shot("3-discover", "/discover");
-await shot("4-profile", "/u/%E3%81%97%E3%81%9A%E3%81%8F");
+await shot("4-profile", "/profile");
+await shot("4b-user", "/u/%E3%81%97%E3%81%9A%E3%81%8F");
 
 // 通報・ブロックを開いた状態
 await shot("5-safety", "/u/%E3%81%97%E3%81%9A%E3%81%8F", async () => {

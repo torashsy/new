@@ -1,4 +1,4 @@
-import { getMe } from "@/lib/queries";
+import { requireViewer } from "@/lib/viewer";
 import { readDb } from "@/lib/store";
 import { saveProfile } from "../actions";
 import { BIO_LIMIT, MAX_TAGS } from "@/lib/limits";
@@ -17,7 +17,7 @@ const AGES = Array.from({ length: 63 }, (_, i) => 18 + i);
 const field = "w-full rounded-lg border border-[var(--color-line)] bg-transparent p-3 text-[15px] outline-none focus:border-[var(--color-accent)]";
 
 export default async function ProfilePage() {
-  const me = await getMe();
+  const me = await requireViewer();
   const db = await readDb();
 
   const counts = new Map<string, number>();

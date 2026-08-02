@@ -5,15 +5,12 @@ import type { Answer, Connection, Exchange, User } from "./types";
 import { isProfileComplete } from "./types";
 import { isMutuallyEligible, narrowingSummary } from "./eligibility";
 import { MAX_INTERESTS_PER_DAY } from "./limits";
-import { DEMO_USER_ID } from "./seed";
 
 export type Candidate = { user: User; breakdown: MatchBreakdown; latestAnswer: Answer | null; latestQuestionText: string | null };
 
-export async function getMe(): Promise<User> {
+export async function getUser(userId: string): Promise<User | null> {
   const db = await readDb();
-  const me = db.users.find((u) => u.id === DEMO_USER_ID);
-  if (!me) throw new Error("デモユーザーが見つからない。.data/db.json を消して作り直してください。");
-  return me;
+  return db.users.find((u) => u.id === userId) ?? null;
 }
 
 export async function getUserByHandle(handle: string): Promise<User | null> {
@@ -143,15 +140,19 @@ export async function connectionsOf(userId: string): Promise<{ connection: Conne
     .filter((c) => c.other && !hidden.has(c.other.id));
 }
 
-export async function getExchange(id: string): Promise<{ exchange: Exchange; other: User; me: User } | null> {
+export async function getExchange(
+  id: string,
+  userId: string,
+): Promise<{ exchange: Exchange; other: User; me: User } | null> {
   const db = await readDb();
   const exchange = db.exchanges.find((e) => e.id === id);
   if (!exchange) return null;
+  // 当事者以外には存在ごと見せない
   const connection = db.connections.find((c) => c.id === exchange.connectionId);
-  if (!connection || !connection.userIds.includes(DEMO_USER_ID)) return null;
-  const otherId = connection.userIds.find((u) => u !== DEMO_USER_ID)!;
+  if (!connection || !connection.userIds.includes(userId)) return null;
+  const otherId = connection.userIds.find((u) => u !== userId)!;
   const users = new Map(db.users.map((u) => [u.id, u]));
-  return { exchange, other: users.get(otherId)!, me: users.get(DEMO_USER_ID)! };
+  return { exchange, other: users.get(otherId)!, me: users.get(userId)! };
 }
 
 /** 自分に興味を送ってきている人（まだ相互ではない）。 */

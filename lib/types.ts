@@ -164,8 +164,38 @@ export type Report = {
   createdAt: string;
 };
 
+/**
+ * パスキー（WebAuthn）の公開鍵。
+ * パスワードは持たない。ハッシュも含めて、秘密を預からない。
+ */
+export type Credential = {
+  /** base64url のクレデンシャルID */
+  id: string;
+  userId: string;
+  /** base64url の公開鍵 */
+  publicKey: string;
+  counter: number;
+  transports: string[];
+  /** 端末の見分けがつくように、登録時のラベルを持つ */
+  label: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+};
+
+/** 登録・認証の途中で使う一時的な値。使ったら消す。 */
+export type Challenge = {
+  id: string;
+  value: string;
+  /** 新規登録の途中なら、まだ確定していないハンドル */
+  pendingHandle: string | null;
+  userId: string | null;
+  expiresAt: string;
+};
+
 export type Database = {
   users: User[];
+  credentials: Credential[];
+  challenges: Challenge[];
   answers: Answer[];
   interests: Interest[];
   connections: Connection[];
@@ -176,6 +206,8 @@ export type Database = {
 
 export const emptyDatabase = (): Database => ({
   users: [],
+  credentials: [],
+  challenges: [],
   answers: [],
   interests: [],
   connections: [],

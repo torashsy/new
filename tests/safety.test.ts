@@ -19,7 +19,7 @@ const DATA_DIR = path.join(process.cwd(), ".data");
 
 async function fresh() {
   await fs.rm(DATA_DIR, { recursive: true, force: true });
-  store.resetCache();
+  await store.resetCache();
   return { store, queries };
 }
 
