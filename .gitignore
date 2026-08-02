@@ -1,11 +1,14 @@
 node_modules/
+.next/
+out/
+build/
 .DS_Store
 *.log
 
-# 生成画像・素材は重いのでリポジトリに入れない
-/renders/
-/assets/
-*.psd
+# 開発用のローカルデータ（消せば seed から作り直される）
+.data/
 
-# 参照用に保存した他人の投稿のスクショ等は絶対にコミットしない
-/research/raw/
+.env
+.env*.local
+next-env.d.ts
+*.tsbuildinfo

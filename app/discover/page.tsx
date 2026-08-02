@@ -1,0 +1,111 @@
+import Link from "next/link";
+import { discover, getMe, incomingInterest } from "@/lib/queries";
+import { explain } from "@/lib/score";
+import { sendInterest, simulateInterestFrom } from "../actions";
+import { Shape } from "@/components/Shape";
+
+// ファイルストアを直接読むため、Next からは変化が見えない。明示的に動的にする。
+export const dynamic = "force-dynamic";
+
+
+export default async function DiscoverPage() {
+  const me = await getMe();
+
+  if (!me.axes) {
+    return (
+      <p className="text-sm text-[var(--color-ink-soft)]">
+        先に <Link href="/diagnostic" className="underline">診断</Link> を済ませてください。
+      </p>
+    );
+  }
+
+  const candidates = await discover(me.id);
+  const incoming = await incomingInterest(me.id);
+
+  return (
+    <div className="space-y-9">
+      <header className="space-y-1.5">
+        <h1 className="text-sm text-[var(--color-ink-soft)]">近いかもしれない人</h1>
+        <p className="text-xs leading-relaxed text-[var(--color-ink-soft)]">
+          出てくる理由は必ず添えています。理由の言えない推薦はしません。
+        </p>
+      </header>
+
+      {incoming.length > 0 && (
+        <section className="space-y-2 rounded-xl border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/5 p-4">
+          <p className="text-sm">あなたに「もっと知りたい」を送っている人がいます（{incoming.length}）</p>
+          <p className="text-xs text-[var(--color-ink-soft)]">
+            誰かは、あなたが同じものを送り返したときに分かります。
+          </p>
+        </section>
+      )}
+
+      {candidates.length === 0 ? (
+        <p className="text-sm text-[var(--color-ink-soft)]">いまは候補がありません。</p>
+      ) : (
+        <ul className="space-y-3">
+          {candidates.map(({ user, breakdown, latestAnswer, latestQuestionText }) => (
+            <li key={user.id} className="space-y-3 rounded-xl border border-[var(--color-line)] p-5">
+              <div className="flex items-start gap-4">
+                <Shape axes={user.axes} seedKey={user.id} size={52} />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <Link href={`/u/${encodeURIComponent(user.handle)}`} className="text-[15px] hover:underline">
+                    {user.handle}
+                  </Link>
+                  <p className="text-xs leading-relaxed text-[var(--color-ink-soft)]">{user.bio}</p>
+                </div>
+                <span className="shrink-0 text-xs tabular-nums text-[var(--color-ink-soft)]">
+                  {breakdown.total}
+                </span>
+              </div>
+
+              <p className="text-xs text-[var(--color-ink-soft)]">{explain(breakdown)}</p>
+
+              {user.tags.length > 0 && (
+                <ul className="flex flex-wrap gap-1.5">
+                  {user.tags.map((t) => (
+                    <li
+                      key={t}
+                      className={`rounded-full px-2.5 py-0.5 text-xs ${
+                        breakdown.sharedTags.includes(t)
+                          ? "bg-[var(--color-accent)]/15 text-[var(--color-ink)]"
+                          : "text-[var(--color-ink-soft)]"
+                      }`}
+                    >
+                      #{t}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {latestAnswer && latestQuestionText && (
+                <div className="space-y-1 border-l-2 border-[var(--color-line)] pl-3.5">
+                  <p className="question text-xs text-[var(--color-ink-soft)]">{latestQuestionText}</p>
+                  <p className="text-[15px] leading-relaxed">{latestAnswer.body}</p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-1">
+                <form action={sendInterest}>
+                  <input type="hidden" name="toUserId" value={user.id} />
+                  <button
+                    type="submit"
+                    className="rounded-full border border-[var(--color-ink)] px-4 py-1.5 text-xs"
+                  >
+                    もっと知りたい
+                  </button>
+                </form>
+                <form action={simulateInterestFrom}>
+                  <input type="hidden" name="fromUserId" value={user.id} />
+                  <button type="submit" className="text-xs text-[var(--color-ink-soft)] underline">
+                    （デモ）相手からも送られた状態にする
+                  </button>
+                </form>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  --font-serif: ui-serif, "Hiragino Mincho ProN", "Noto Serif JP", serif;
+
+  --color-ink: oklch(0.24 0.012 260);
+  --color-ink-soft: oklch(0.48 0.012 260);
+  --color-paper: oklch(0.985 0.004 95);
+  --color-line: oklch(0.9 0.006 260);
+  --color-accent: oklch(0.58 0.1 235);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-ink: oklch(0.93 0.008 260);
+    --color-ink-soft: oklch(0.68 0.01 260);
+    --color-paper: oklch(0.19 0.01 260);
+    --color-line: oklch(0.3 0.012 260);
+    --color-accent: oklch(0.75 0.09 235);
+  }
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 問いは本文と明確に格を変える。読ませるものなので明朝。 */
+.question {
+  font-family: var(--font-serif);
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+
+textarea,
+input {
+  font: inherit;
+  color: inherit;
+}
