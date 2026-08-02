@@ -59,6 +59,7 @@
       "seasons": ["summer"],
       "verified": false,
       "source": null,
+      "en": "plain white short-sleeve blouse, slightly limp fabric from frequent washing, small wrinkles at the hem",
       "wear_notes": "夏の通勤はこれ一択。2枚持ちで回している。汗染み対策で毎日洗うため生地がへたっている。",
       "retire_date": null
     },
@@ -77,6 +78,7 @@
       "seasons": ["spring", "summer", "autumn"],
       "verified": false,
       "source": null,
+      "en": "navy lightweight ankle-length tapered trousers, soft drape, slight creasing at the knees",
       "wear_notes": "夏用。黒のテーパードパンツが暑くて追加した。",
       "retire_date": null
     },
@@ -239,6 +241,7 @@
       "seasons": ["spring", "summer", "autumn", "winter"],
       "verified": false,
       "source": null,
+      "en": "black low-heel pumps, 3cm heel, visible creasing across the toe box, worn-down heel tips",
       "wear_notes": "ヒール3cm。つま先に履きジワ。かかとが減っている。",
       "retire_date": null
     },
@@ -275,6 +278,7 @@
       "seasons": ["spring", "summer", "autumn", "winter"],
       "verified": false,
       "source": null,
+      "en": "black nylon A4 tote bag, slouched and misshapen base from daily use, held in one hand",
       "wear_notes": "通勤で毎日使うので底がヨレている。中身は財布・化粧ポーチ・折り畳み傘・エコバッグ・充電器。",
       "retire_date": null
     },
@@ -329,6 +333,7 @@
       "seasons": ["spring", "summer", "autumn", "winter"],
       "verified": false,
       "source": null,
+      "en": "thin silver chain necklace, 40cm, sitting just below the collarbone",
       "wear_notes": "23歳の誕生日に自分で買った。ほぼ毎日着けているので、同じものが繰り返し写るのが正しい。",
       "retire_date": null
     },

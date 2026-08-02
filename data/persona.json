@@ -106,8 +106,11 @@
     "build": "標準",
     "shoe_size_cm": 23.5,
     "clothing_size": "トップスM / ボトムスS / 靴23.5",
-    "hair": "鎖骨下 / 暗めのブラウン / 前髪あり（目にかかる長さ）",
-    "hair_timeline": "2026-05に肩上まで切った。それ以前の投稿は長い。切った日を境に一貫させること。",
+    "hair": "暗めのブラウン / 前髪あり（目にかかる長さ）",
+    "hair_history": [
+      { "from": "2021-03", "length": "鎖骨下", "en": "long dark brown hair past the collarbone" },
+      { "from": "2026-05-16", "length": "肩上", "en": "shoulder-length dark brown hair" }
+    ],
     "note": "実在人物をモデルにしない。生成のシード / LoRA の管理は docs/shooting-guide.md。"
   },
 

@@ -5,6 +5,7 @@
   "type": "module",
   "description": "AI インフルエンサーの設定を破綻なく作り込むためのリポジトリ",
   "scripts": {
-    "validate": "node scripts/validate.mjs"
+    "validate": "node scripts/validate.mjs",
+    "prompt": "node scripts/prompt.mjs"
   }
 }
