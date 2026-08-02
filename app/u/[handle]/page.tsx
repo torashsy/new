@@ -4,7 +4,7 @@ import { answersOf, getMe, getUserByHandle, isBlockedByMe } from "@/lib/queries"
 import { SafetyControls } from "@/components/SafetyControls";
 import { DAILY_QUESTIONS } from "@/lib/questions";
 import { AXES, describeAxis } from "@/lib/axes";
-import { AXIS_IDS } from "@/lib/types";
+import { AXIS_IDS, ageOf, GENDER_LABELS } from "@/lib/types";
 import { Shape } from "@/components/Shape";
 
 // ファイルストアを直接読むため、Next からは変化が見えない。明示的に動的にする。
@@ -29,6 +29,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ handle
         <Shape axes={user.axes} seedKey={user.id} size={96} />
         <div className="min-w-0 flex-1 space-y-2">
           <h1 className="text-lg">{user.handle}</h1>
+          <p className="text-xs text-[var(--color-ink-soft)]">
+            {ageOf(user.birthYear) ?? "—"}歳 ・ {user.region ?? "—"}
+            {user.gender && ` ・ ${GENDER_LABELS[user.gender]}`}
+          </p>
           <p className="text-sm leading-relaxed text-[var(--color-ink-soft)]">{user.bio}</p>
           {user.tags.length > 0 && (
             <ul className="flex flex-wrap gap-1.5 pt-1">
@@ -41,8 +45,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ handle
           )}
           {isMe && (
             <div className="flex gap-3 pt-2 text-xs">
-              <Link href="/tags" className="underline text-[var(--color-ink-soft)]">
-                ひとこととタグを直す
+              <Link href="/profile" className="underline text-[var(--color-ink-soft)]">
+                プロフィールを直す
               </Link>
               <Link href="/diagnostic" className="underline text-[var(--color-ink-soft)]">
                 診断をやり直す

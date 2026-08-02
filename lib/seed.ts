@@ -1,5 +1,5 @@
-import type { Axes, Database, User } from "./types";
-import { emptyDatabase } from "./types";
+import type { Axes, Database, Preference, User } from "./types";
+import { emptyDatabase, DEFAULT_PREFERENCE } from "./types";
 import { DAILY_QUESTIONS, questionForDate } from "./questions";
 
 /** 開発用の初期データ。実在の人物とは無関係。 */
@@ -8,22 +8,52 @@ const ax = (pace: number, plan: number, depth: number, logic: number, novelty: n
   pace, plan, depth, logic, novelty, expression,
 });
 
-type SeedUser = Omit<User, "id" | "createdAt">;
+type SeedUser = Omit<User, "id" | "createdAt" | "preference"> & { preference?: Partial<Preference> };
+
+const THIS_YEAR = new Date().getFullYear();
+/** 年齢から生年を逆算する（seed を毎年書き直さなくて済むように）。 */
+const born = (age: number) => THIS_YEAR - age;
 
 const SEED_USERS: SeedUser[] = [
-  { handle: "みずいろ", bio: "だいたい家にいます。人の話を聞くのは好き。", axes: ax(28, 62, 78, 45, 40, 38), tags: ["喫茶店", "積読", "銭湯", "散歩"] },
-  { handle: "とんび", bio: "週末は山か海のどちらかにいます。", axes: ax(72, 30, 45, 38, 85, 70), tags: ["山", "一人旅", "珈琲", "写真を撮らない旅"] },
-  { handle: "しずく", bio: "図書館で借りた本を延滞しがち。", axes: ax(22, 70, 85, 62, 32, 30), tags: ["図書館", "積読", "短歌", "紅茶"] },
-  { handle: "こむぎ", bio: "自炊は得意じゃないけど続けてる。", axes: ax(45, 55, 70, 40, 48, 55), tags: ["自炊", "銭湯", "ラジオ", "喫茶店"] },
-  { handle: "月と屋根", bio: "夜のほうが頭が動きます。", axes: ax(25, 38, 80, 72, 60, 25), tags: ["夜型", "ラジオ", "映画館", "積読"] },
-  { handle: "あさぎ", bio: "朝5時に起きて、夜9時に寝ます。", axes: ax(40, 88, 60, 68, 25, 60), tags: ["早起き", "散歩", "自炊", "植物"] },
-  { handle: "ひらの", bio: "人の作ったものを見に行くのが好き。", axes: ax(58, 45, 52, 42, 78, 62), tags: ["展示", "映画館", "古着", "珈琲"] },
-  { handle: "ゆうぐれ", bio: "だいたい猫といます。", axes: ax(18, 48, 88, 35, 30, 22), tags: ["猫", "積読", "紅茶", "図書館"] },
-  { handle: "きしめん", bio: "ボードゲームやる人を探しています。", axes: ax(82, 58, 40, 75, 65, 78), tags: ["ボードゲーム", "自炊", "銭湯"] },
-  { handle: "さわ", bio: "楽器は下手なまま10年やっています。", axes: ax(35, 42, 75, 30, 55, 35), tags: ["楽器", "夜型", "喫茶店", "短歌"] },
-  { handle: "のこぎり", bio: "手を動かしていないと落ち着かない。", axes: ax(48, 72, 55, 80, 70, 65), tags: ["日曜大工", "植物", "早起き"] },
-  { handle: "まつり", bio: "人の多いところが平気なほうです。", axes: ax(88, 35, 38, 45, 82, 85), tags: ["ボードゲーム", "展示", "古着", "一人旅"] },
-  { handle: "はこ", bio: "話すのは苦手だけど書くのは平気。", axes: ax(20, 65, 82, 58, 38, 28), tags: ["短歌", "図書館", "夜型", "猫"] },
+  { handle: "みずいろ", bio: "だいたい家にいます。人の話を聞くのは好き。", axes: ax(28, 62, 78, 45, 40, 38), tags: ["喫茶店", "積読", "銭湯", "散歩"],
+    birthYear: born(27), gender: "female", region: "東京都",
+    preference: { genders: ["male"], ageMin: 25, ageMax: 35, regionScope: "any" } },
+  { handle: "とんび", bio: "週末は山か海のどちらかにいます。", axes: ax(72, 30, 45, 38, 85, 70), tags: ["山", "一人旅", "珈琲", "写真を撮らない旅"],
+    birthYear: born(31), gender: "male", region: "東京都",
+    preference: { genders: ["female"], ageMin: 24, ageMax: 34, regionScope: "any" } },
+  { handle: "しずく", bio: "図書館で借りた本を延滞しがち。", axes: ax(22, 70, 85, 62, 32, 30), tags: ["図書館", "積読", "短歌", "紅茶"],
+    birthYear: born(26), gender: "female", region: "神奈川県",
+    preference: { genders: ["male"], ageMin: 25, ageMax: 33, regionScope: "any" } },
+  { handle: "こむぎ", bio: "自炊は得意じゃないけど続けてる。", axes: ax(45, 55, 70, 40, 48, 55), tags: ["自炊", "銭湯", "ラジオ", "喫茶店"],
+    birthYear: born(29), gender: "male", region: "東京都",
+    preference: { genders: ["female"], ageMin: 24, ageMax: 32, regionScope: "any" } },
+  { handle: "月と屋根", bio: "夜のほうが頭が動きます。", axes: ax(25, 38, 80, 72, 60, 25), tags: ["夜型", "ラジオ", "映画館", "積読"],
+    birthYear: born(33), gender: "male", region: "東京都",
+    preference: { genders: ["female"], ageMin: 26, ageMax: 36, regionScope: "any" } },
+  { handle: "あさぎ", bio: "朝5時に起きて、夜9時に寝ます。", axes: ax(40, 88, 60, 68, 25, 60), tags: ["早起き", "散歩", "自炊", "植物"],
+    birthYear: born(25), gender: "female", region: "埼玉県",
+    preference: { genders: ["male"], ageMin: 25, ageMax: 34, regionScope: "any" } },
+  { handle: "ひらの", bio: "人の作ったものを見に行くのが好き。", axes: ax(58, 45, 52, 42, 78, 62), tags: ["展示", "映画館", "古着", "珈琲"],
+    birthYear: born(30), gender: "male", region: "東京都",
+    preference: { genders: ["female"], ageMin: 25, ageMax: 35, regionScope: "any" } },
+  { handle: "ゆうぐれ", bio: "だいたい猫といます。", axes: ax(18, 48, 88, 35, 30, 22), tags: ["猫", "積読", "紅茶", "図書館"],
+    birthYear: born(28), gender: "female", region: "東京都",
+    preference: { genders: ["male"], ageMin: 27, ageMax: 37, regionScope: "any" } },
+  { handle: "きしめん", bio: "ボードゲームやる人を探しています。", axes: ax(82, 58, 40, 75, 65, 78), tags: ["ボードゲーム", "自炊", "銭湯"],
+    birthYear: born(34), gender: "male", region: "千葉県",
+    preference: { genders: ["female"], ageMin: 26, ageMax: 36, regionScope: "any" } },
+  { handle: "さわ", bio: "楽器は下手なまま10年やっています。", axes: ax(35, 42, 75, 30, 55, 35), tags: ["楽器", "夜型", "喫茶店", "短歌"],
+    birthYear: born(26), gender: "male", region: "東京都",
+    preference: { genders: ["female"], ageMin: 23, ageMax: 31, regionScope: "any" } },
+  { handle: "のこぎり", bio: "手を動かしていないと落ち着かない。", axes: ax(48, 72, 55, 80, 70, 65), tags: ["日曜大工", "植物", "早起き"],
+    birthYear: born(32), gender: "male", region: "東京都",
+    preference: { genders: ["female"], ageMin: 26, ageMax: 34, regionScope: "any" } },
+  { handle: "まつり", bio: "人の多いところが平気なほうです。", axes: ax(88, 35, 38, 45, 82, 85), tags: ["ボードゲーム", "展示", "古着", "一人旅"],
+    birthYear: born(24), gender: "female", region: "大阪府",
+    preference: { genders: ["male"], ageMin: 24, ageMax: 32, regionScope: "same" } },
+  { handle: "はこ", bio: "話すのは苦手だけど書くのは平気。", axes: ax(20, 65, 82, 58, 38, 28), tags: ["短歌", "図書館", "夜型", "猫"],
+    birthYear: born(29), gender: "female", region: "東京都",
+    preference: { genders: ["male"], ageMin: 27, ageMax: 38, regionScope: "any" } },
 ];
 
 /** [ユーザーindex, 回答] の並び。全員が全部に答えているわけではないのが自然。 */
@@ -75,6 +105,7 @@ export function seedDatabase(): Database {
 
   db.users = SEED_USERS.map((u, i) => ({
     ...u,
+    preference: { ...DEFAULT_PREFERENCE, ...u.preference },
     id: `usr_${String(i + 1).padStart(2, "0")}`,
     createdAt: new Date(Date.now() - (SEED_USERS.length - i) * 86400000).toISOString(),
   }));

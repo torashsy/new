@@ -14,6 +14,38 @@ export type AxisId = (typeof AXIS_IDS)[number];
 /** 各軸 0-100。50 が中庸。 */
 export type Axes = Record<AxisId, number>;
 
+export const GENDERS = ["female", "male", "other"] as const;
+export type Gender = (typeof GENDERS)[number];
+
+export const GENDER_LABELS: Record<Gender, string> = {
+  female: "女性",
+  male: "男性",
+  other: "その他・答えない",
+};
+
+/**
+ * 相手に求める条件。
+ *
+ * 恋愛前提のアプリなので、性別・年齢・地域は絞り込みに使う。
+ * ただし絞れるのはここまでで、これ以外の条件検索は作らない。
+ * 「条件で人を絞る」ことと「顔とトークで人を選ぶ」ことは別の問題なので、
+ * 前者は認めて、後者だけを潰す。
+ */
+export type Preference = {
+  genders: Gender[];
+  ageMin: number;
+  ageMax: number;
+  /** "same" = 同じ都道府県のみ / "any" = どこでも */
+  regionScope: "same" | "any";
+};
+
+export const DEFAULT_PREFERENCE: Preference = {
+  genders: ["female", "male", "other"],
+  ageMin: 20,
+  ageMax: 45,
+  regionScope: "any",
+};
+
 export type User = {
   id: string;
   /** 表示名。本名を求めない。 */
@@ -24,8 +56,27 @@ export type User = {
   axes: Axes | null;
   /** ハッシュタグ（# は含めない）。 */
   tags: string[];
+
+  /** 生年月日は持たず、生年だけ。日付まで要る場面がない。 */
+  birthYear: number | null;
+  gender: Gender | null;
+  /** 都道府県。市区町村までは持たない（特定に繋がるため）。 */
+  region: string | null;
+  preference: Preference;
+
   createdAt: string;
 };
+
+/** 誕生日を持たないので、年齢は「その年に迎える歳」で近似する。 */
+export function ageOf(birthYear: number | null, now = new Date()): number | null {
+  if (!birthYear) return null;
+  return now.getFullYear() - birthYear;
+}
+
+/** 属性が埋まっていて、相手に表示できる状態か。 */
+export function isProfileComplete(user: User): boolean {
+  return Boolean(user.axes && user.birthYear && user.gender && user.region);
+}
 
 /** 全員に同じ問いを出す。1日1問。 */
 export type DailyQuestion = {

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { discover, getMe, incomingInterest, interestBudget } from "@/lib/queries";
+import { discover, getMe, incomingInterest, interestBudget, whyNoCandidates } from "@/lib/queries";
+import { ageOf, isProfileComplete, GENDER_LABELS } from "@/lib/types";
 import { MAX_INTERESTS_PER_DAY } from "@/lib/limits";
 import { explain } from "@/lib/score";
 import { sendInterest, simulateInterestFrom } from "../actions";
@@ -20,9 +21,19 @@ export default async function DiscoverPage() {
     );
   }
 
+  if (!isProfileComplete(me)) {
+    return (
+      <p className="text-sm leading-relaxed text-[var(--color-ink-soft)]">
+        年齢・性別・場所が未登録です。条件が合う相手を出せないので、
+        先に <Link href="/profile" className="underline">プロフィール</Link> を埋めてください。
+      </p>
+    );
+  }
+
   const candidates = await discover(me.id);
   const incoming = await incomingInterest(me.id);
   const budget = await interestBudget(me.id);
+  const narrowing = candidates.length === 0 ? await whyNoCandidates(me.id) : null;
 
   return (
     <div className="space-y-9">
@@ -47,7 +58,17 @@ export default async function DiscoverPage() {
       )}
 
       {candidates.length === 0 ? (
-        <p className="text-sm text-[var(--color-ink-soft)]">いまは候補がありません。</p>
+        <div className="space-y-2">
+          <p className="text-sm text-[var(--color-ink-soft)]">いまは候補がありません。</p>
+          {narrowing && (
+            <p className="text-xs leading-relaxed text-[var(--color-ink-soft)]">
+              条件で外れた人: 性別 {narrowing.gender}人 ／ 年齢 {narrowing.age}人 ／ 場所{" "}
+              {narrowing.region}人 ／ 登録が途中の人 {narrowing.incomplete}人。
+              <br />
+              <Link href="/profile" className="underline">条件をゆるめる</Link>
+            </p>
+          )}
+        </div>
       ) : (
         <ul className="space-y-3">
           {candidates.map(({ user, breakdown, latestAnswer, latestQuestionText }) => (
@@ -58,6 +79,10 @@ export default async function DiscoverPage() {
                   <Link href={`/u/${encodeURIComponent(user.handle)}`} className="text-[15px] hover:underline">
                     {user.handle}
                   </Link>
+                  <p className="text-xs text-[var(--color-ink-soft)]">
+                    {ageOf(user.birthYear)}歳 ・ {user.region}
+                    {user.gender && ` ・ ${GENDER_LABELS[user.gender]}`}
+                  </p>
                   <p className="text-xs leading-relaxed text-[var(--color-ink-soft)]">{user.bio}</p>
                 </div>
                 <span className="shrink-0 text-xs tabular-nums text-[var(--color-ink-soft)]">

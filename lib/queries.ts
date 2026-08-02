@@ -2,6 +2,8 @@ import { readDb } from "./store";
 import { DAILY_QUESTIONS, questionForDate, today } from "./questions";
 import { matchScore, type MatchBreakdown } from "./score";
 import type { Answer, Connection, Exchange, User } from "./types";
+import { isProfileComplete } from "./types";
+import { isMutuallyEligible, narrowingSummary } from "./eligibility";
 import { MAX_INTERESTS_PER_DAY } from "./limits";
 import { DEMO_USER_ID } from "./seed";
 
@@ -101,6 +103,8 @@ export async function discover(userId: string, limit = 8): Promise<Candidate[]> 
     if (other.id === userId || !other.axes) continue;
     if (connectedIds.has(other.id) || sentIds.has(other.id)) continue;
     if (hidden.has(other.id)) continue;
+    // 条件は双方向で見る。片側だけ合っていても出さない。
+    if (!isMutuallyEligible(me, other)) continue;
 
     const theirAnswers = db.answers
       .filter((a) => a.userId === other.id)
@@ -160,4 +164,19 @@ export async function incomingInterest(userId: string): Promise<User[]> {
     .filter((i) => i.toUserId === userId && !sent.has(i.fromUserId) && !hidden.has(i.fromUserId))
     .map((i) => users.get(i.fromUserId))
     .filter((u): u is User => Boolean(u));
+}
+
+/** プロフィールが埋まっているか（未完成なら他人に出さないし、他人も出さない）。 */
+export async function profileComplete(userId: string): Promise<boolean> {
+  const db = await readDb();
+  const me = db.users.find((u) => u.id === userId);
+  return me ? isProfileComplete(me) : false;
+}
+
+/** 候補が0件のとき、どの条件で何人落ちたのかを返す。 */
+export async function whyNoCandidates(userId: string) {
+  const db = await readDb();
+  const me = db.users.find((u) => u.id === userId);
+  if (!me) return null;
+  return narrowingSummary(me, db.users);
 }

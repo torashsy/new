@@ -6,9 +6,11 @@ import { mutate, newId } from "@/lib/store";
 import { questionForDate, today, EXCHANGE_PROMPTS } from "@/lib/questions";
 import { scoreDiagnostic } from "@/lib/axes";
 import { DEMO_USER_ID } from "@/lib/seed";
-import type { Connection, ReportReason } from "@/lib/types";
-import { REPORT_REASONS } from "@/lib/types";
+import type { Connection, Gender, ReportReason } from "@/lib/types";
+import { REPORT_REASONS, GENDERS } from "@/lib/types";
+import { isRegion } from "@/lib/regions";
 import { ANSWER_LIMIT, BIO_LIMIT, MAX_TAGS, MAX_INTERESTS_PER_DAY } from "@/lib/limits";
+import { DEFAULT_PREFERENCE } from "@/lib/types";
 
 export async function submitAnswer(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim().slice(0, ANSWER_LIMIT);
@@ -47,7 +49,7 @@ export async function saveDiagnostic(formData: FormData) {
   });
 
   revalidatePath("/", "layout");
-  redirect("/tags");
+  redirect("/profile");
 }
 
 export async function saveProfile(formData: FormData) {
@@ -58,11 +60,47 @@ export async function saveProfile(formData: FormData) {
     .filter(Boolean)
     .slice(0, MAX_TAGS);
 
+  const rawYear = Number(formData.get("birthYear"));
+  const thisYear = new Date().getFullYear();
+  // 18歳未満は登録できない
+  const birthYear =
+    Number.isFinite(rawYear) && thisYear - rawYear >= 18 && thisYear - rawYear <= 80 ? rawYear : null;
+
+  const rawGender = String(formData.get("gender") ?? "");
+  const gender = GENDERS.includes(rawGender as Gender) ? (rawGender as Gender) : null;
+
+  const rawRegion = String(formData.get("region") ?? "");
+  const region = isRegion(rawRegion) ? rawRegion : null;
+
+  const prefGenders = formData
+    .getAll("prefGenders")
+    .map(String)
+    .filter((g): g is Gender => GENDERS.includes(g as Gender));
+
+  // 下限と上限が逆に入っていても壊れないよう並べ替える
+  const bounds = [Number(formData.get("ageMin")), Number(formData.get("ageMax"))]
+    .map((n) => (Number.isFinite(n) ? Math.min(80, Math.max(18, n)) : null));
+  const [ageMin, ageMax] = bounds.every((n) => n !== null)
+    ? [Math.min(bounds[0]!, bounds[1]!), Math.max(bounds[0]!, bounds[1]!)]
+    : [DEFAULT_PREFERENCE.ageMin, DEFAULT_PREFERENCE.ageMax];
+
+  const regionScope = formData.get("regionScope") === "same" ? "same" : "any";
+
   await mutate((db) => {
     const me = db.users.find((u) => u.id === DEMO_USER_ID);
     if (!me) return;
     me.bio = bio;
     me.tags = [...new Set(tags)];
+    if (birthYear) me.birthYear = birthYear;
+    if (gender) me.gender = gender;
+    if (region) me.region = region;
+    me.preference = {
+      // 空で保存されると誰も出てこなくなるので、その場合は既定に戻す
+      genders: prefGenders.length ? prefGenders : DEFAULT_PREFERENCE.genders,
+      ageMin,
+      ageMax,
+      regionScope,
+    };
   });
 
   revalidatePath("/", "layout");
