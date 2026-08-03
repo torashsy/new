@@ -7,6 +7,7 @@ import { questionForDate, today, EXCHANGE_PROMPTS } from "@/lib/questions";
 import { scoreDiagnostic } from "@/lib/axes";
 import { currentUserId, clearSession } from "@/lib/session";
 import { respondToIntroduction, simulateIntroductionReply } from "@/lib/introductions";
+import { offerContact, simulateContactOffer } from "@/lib/handoff";
 
 /** ログインしていなければ操作させない。 */
 async function viewerId(): Promise<string> {
@@ -349,5 +350,29 @@ export async function simulateIntroductionAnswer(formData: FormData) {
 
   await simulateIntroductionReply(introductionId, userId, answer);
   revalidatePath("/weekly");
+  revalidatePath("/connections");
+}
+
+// ── 連絡先の受け渡し（アプリの出口） ────────────────────────
+
+export async function offerContactAction(formData: FormData) {
+  const viewer = await viewerId();
+  const connectionId = String(formData.get("connectionId") ?? "");
+  const contact = String(formData.get("contact") ?? "");
+  if (!connectionId || !contact.trim()) return;
+
+  await offerContact(connectionId, viewer, contact);
+  revalidatePath("/connections");
+}
+
+/** デモ用: 相手が先に預けた状態にする。 */
+export async function simulateContactOfferAction(formData: FormData) {
+  await viewerId();
+  const connectionId = String(formData.get("connectionId") ?? "");
+  const userId = String(formData.get("userId") ?? "");
+  const contact = String(formData.get("contact") ?? "");
+  if (!connectionId || !userId || !contact.trim()) return;
+
+  await simulateContactOffer(connectionId, userId, contact);
   revalidatePath("/connections");
 }

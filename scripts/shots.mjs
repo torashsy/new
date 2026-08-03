@@ -63,4 +63,25 @@ await page.waitForLoadState("networkidle");
 await page.screenshot({ path: `${OUT}/7-exchange.png`, fullPage: true });
 console.log("7-exchange  （二人とも答えて開いた状態）");
 
+// 出口が開くまで、あと2回お題を開く
+for (const [mine, theirs] of [
+  ["決めたことを翌日に変えてしまうところ", "待つのが下手なところ"],
+  ["朝、誰もいない道を歩いている時間", "帰り道でラジオを聴いている時間"],
+]) {
+  await page.goto(`${BASE}/connections`, { waitUntil: "networkidle" });
+  await page.locator("form button.question").first().click();
+  await page.waitForLoadState("networkidle");
+  await page.locator('textarea[name="body"]').fill(mine);
+  await page.locator('button:has-text("答える")').click();
+  await page.waitForLoadState("networkidle");
+  await page.locator('input[name="body"]').fill(theirs);
+  await page.locator('button:has-text("入れる")').click();
+  await page.waitForLoadState("networkidle");
+}
+
+await shot("8-handoff", "/connections", async () => {
+  await page.locator('summary:has-text("連絡先を渡す")').click();
+  await page.waitForTimeout(150);
+});
+
 await browser.close();

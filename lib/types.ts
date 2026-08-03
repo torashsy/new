@@ -215,11 +215,33 @@ export type Introduction = {
   createdAt: string;
 };
 
+/**
+ * 連絡先の受け渡し。アプリの出口。
+ *
+ * このアプリは入口に徹する。お題交換が3回開いたら、相互同意で一度だけ
+ * 連絡先を渡し合える。以降は当人同士でやってもらう。
+ *
+ * 「顔をいつ見るか」もここで解決している。アプリの中は最後まで写真ゼロのまま、
+ * 外に出た後は当人の自由。例外を1つ作ると原則が全部崩れるので、作らない。
+ */
+export type Handoff = {
+  id: string;
+  connectionId: string;
+  /** 自分が入れるまで相手のものは見えない。日々の問いと同じ構造。 */
+  entries: { userId: string; contact: string; createdAt: string }[];
+  createdAt: string;
+};
+
+/** 連絡先を渡せるようになるまでに必要な、開いた交換の数。 */
+export const HANDOFF_REQUIRED_EXCHANGES = 3;
+export const CONTACT_LIMIT = 100;
+
 export type Database = {
   users: User[];
   credentials: Credential[];
   challenges: Challenge[];
   introductions: Introduction[];
+  handoffs: Handoff[];
   answers: Answer[];
   interests: Interest[];
   connections: Connection[];
@@ -233,6 +255,7 @@ export const emptyDatabase = (): Database => ({
   credentials: [],
   challenges: [],
   introductions: [],
+  handoffs: [],
   answers: [],
   interests: [],
   connections: [],

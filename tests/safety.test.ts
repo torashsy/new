@@ -13,6 +13,7 @@ import path from "node:path";
 
 import * as store from "../lib/store";
 import * as queries from "../lib/queries";
+import { questionForDate, today } from "../lib/questions";
 import type { Database } from "../lib/types";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
@@ -67,6 +68,22 @@ describe("ブロック", () => {
 
   test("ブロックすると今日のフィードからも消える", async () => {
     const { store, queries } = await fresh();
+    // 今日の問いに誰が答えているかは日付で変わるので、前提を自分で作る。
+    // usr_01 が答えていないとフィード自体が開かない（それが仕様）。
+    const q = questionForDate(today());
+    await store.mutate((db: Database) => {
+      for (const userId of ["usr_01", "usr_02"]) {
+        if (db.answers.some((a) => a.userId === userId && a.questionId === q.id)) continue;
+        db.answers.push({
+          id: `ans_test_${userId}`,
+          userId,
+          questionId: q.id,
+          body: "テスト",
+          createdAt: new Date().toISOString(),
+        });
+      }
+    });
+
     const feed = await queries.todayFeed("usr_01");
     assert.ok(feed && feed.length > 0, "前提: 今日のフィードに回答がある");
     const target = feed[0].userId;

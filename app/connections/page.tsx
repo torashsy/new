@@ -4,6 +4,8 @@ import {connectionsOf} from "@/lib/queries";
 import { EXCHANGE_PROMPTS } from "@/lib/questions";
 import { openExchange } from "../actions";
 import { Shape } from "@/components/Shape";
+import { Handoff } from "@/components/Handoff";
+import { handoffFor } from "@/lib/handoff";
 
 // ファイルストアを直接読むため、Next からは変化が見えない。明示的に動的にする。
 export const dynamic = "force-dynamic";
@@ -12,6 +14,14 @@ export const dynamic = "force-dynamic";
 export default async function ConnectionsPage() {
   const me = await requireViewer();
   const connections = await connectionsOf(me.id);
+  // 出口の状態は接続ごとに引く
+  const handoffs = new Map(
+    await Promise.all(
+      connections.map(async (c) =>
+        [c.connection.id, await handoffFor(c.connection.id, me.id, c.exchanges)] as const,
+      ),
+    ),
+  );
 
   if (connections.length === 0) {
     return (
@@ -90,6 +100,13 @@ export default async function ConnectionsPage() {
                 </form>
               ))}
             </div>
+
+            <Handoff
+              connectionId={connection.id}
+              otherHandle={other.handle}
+              otherUserId={other.id}
+              view={handoffs.get(connection.id)!}
+            />
           </li>
         ))}
       </ul>
