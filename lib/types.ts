@@ -192,10 +192,34 @@ export type Challenge = {
   expiresAt: string;
 };
 
+/**
+ * おまかせマッチ（週の紹介）。
+ *
+ * 「もっと知りたい」を自分から送るのが、このアプリでいちばん勇気の要る行為。
+ * そこを丸ごと肩代わりする仕組み。週に1人だけ、システムが両者に同時に提示する。
+ *
+ * 設計上の要点:
+ *  - 週に1人だけ。選択肢が多いこと自体が、人を消耗させる
+ *  - 両者に同時に出す。「送る側／送られる側」の非対称を作らない
+ *  - 断られたことが相手に分からない。どちらが断っても表示は同じ
+ */
+export type IntroductionAnswer = "yes" | "no";
+
+export type Introduction = {
+  id: string;
+  /** その週の月曜日 (YYYY-MM-DD)。 */
+  weekStart: string;
+  /** 常に userId の昇順。 */
+  userIds: [string, string];
+  responses: { userId: string; answer: IntroductionAnswer; createdAt: string }[];
+  createdAt: string;
+};
+
 export type Database = {
   users: User[];
   credentials: Credential[];
   challenges: Challenge[];
+  introductions: Introduction[];
   answers: Answer[];
   interests: Interest[];
   connections: Connection[];
@@ -208,6 +232,7 @@ export const emptyDatabase = (): Database => ({
   users: [],
   credentials: [],
   challenges: [],
+  introductions: [],
   answers: [],
   interests: [],
   connections: [],

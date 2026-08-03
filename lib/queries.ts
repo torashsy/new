@@ -1,7 +1,7 @@
 import { readDb } from "./store";
 import { DAILY_QUESTIONS, questionForDate, today } from "./questions";
 import { matchScore, type MatchBreakdown } from "./score";
-import type { Answer, Connection, Exchange, User } from "./types";
+import type { Answer, Connection, Exchange, Introduction, User } from "./types";
 import { isProfileComplete } from "./types";
 import { isMutuallyEligible, narrowingSummary } from "./eligibility";
 import { MAX_INTERESTS_PER_DAY } from "./limits";
@@ -180,4 +180,40 @@ export async function whyNoCandidates(userId: string) {
   const me = db.users.find((u) => u.id === userId);
   if (!me) return null;
   return narrowingSummary(me, db.users);
+}
+
+// ── おまかせマッチ ──────────────────────────────────────────
+
+/** 指定の週の、その人あての紹介。まだ作られていなければ null。 */
+export async function introductionFor(
+  userId: string,
+  weekStart: string,
+): Promise<{ intro: Introduction; other: User } | null> {
+  const db = await readDb();
+  const intro = db.introductions.find(
+    (i) => i.weekStart === weekStart && i.userIds.includes(userId),
+  );
+  if (!intro) return null;
+  const otherId = intro.userIds.find((id) => id !== userId)!;
+  const other = db.users.find((u) => u.id === otherId);
+  return other ? { intro, other } : null;
+}
+
+/** 相手の直近の回答。紹介画面で「話の糸口」として見せる。 */
+export async function recentAnswersOf(userId: string, limit = 3): Promise<{ question: string; body: string }[]> {
+  const db = await readDb();
+  return db.answers
+    .filter((a) => a.userId === userId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit)
+    .map((a) => ({ question: questionTextById(a.questionId) ?? "", body: a.body }))
+    .filter((a) => a.question);
+}
+
+/** これまでの紹介の履歴（新しい順）。 */
+export async function introductionHistory(userId: string): Promise<Introduction[]> {
+  const db = await readDb();
+  return db.introductions
+    .filter((i) => i.userIds.includes(userId))
+    .sort((a, b) => b.weekStart.localeCompare(a.weekStart));
 }

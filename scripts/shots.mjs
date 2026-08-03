@@ -31,6 +31,7 @@ await page.getByRole("button", { name: /みずいろとして入る/ }).click();
 await page.waitForURL((url) => !url.pathname.startsWith("/signin"), { timeout: 15000 });
 
 await shot("1-today", "/");
+await shot("1b-weekly", "/weekly");
 await shot("2-diagnostic", "/diagnostic");
 await shot("3-discover", "/discover");
 await shot("4-profile", "/profile");

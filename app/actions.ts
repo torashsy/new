@@ -6,6 +6,7 @@ import { mutate, newId } from "@/lib/store";
 import { questionForDate, today, EXCHANGE_PROMPTS } from "@/lib/questions";
 import { scoreDiagnostic } from "@/lib/axes";
 import { currentUserId, clearSession } from "@/lib/session";
+import { respondToIntroduction, simulateIntroductionReply } from "@/lib/introductions";
 
 /** ログインしていなければ操作させない。 */
 async function viewerId(): Promise<string> {
@@ -323,4 +324,30 @@ export async function signOut() {
   await clearSession();
   revalidatePath("/", "layout");
   redirect("/signin");
+}
+
+// ── おまかせマッチ ──────────────────────────────────────────
+
+export async function respondIntroduction(formData: FormData) {
+  const viewer = await viewerId();
+  const introductionId = String(formData.get("introductionId") ?? "");
+  const answer = String(formData.get("answer") ?? "");
+  if (!introductionId || (answer !== "yes" && answer !== "no")) return;
+
+  await respondToIntroduction(introductionId, viewer, answer);
+  revalidatePath("/weekly");
+  revalidatePath("/connections");
+}
+
+/** デモ用: 相手の返事を手元で再現する。 */
+export async function simulateIntroductionAnswer(formData: FormData) {
+  await viewerId();
+  const introductionId = String(formData.get("introductionId") ?? "");
+  const userId = String(formData.get("userId") ?? "");
+  const answer = String(formData.get("answer") ?? "");
+  if (!introductionId || !userId || (answer !== "yes" && answer !== "no")) return;
+
+  await simulateIntroductionReply(introductionId, userId, answer);
+  revalidatePath("/weekly");
+  revalidatePath("/connections");
 }
